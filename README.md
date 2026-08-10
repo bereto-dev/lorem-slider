@@ -1,4 +1,4 @@
-# Lorem Slider (v1.0.0)
+# Lorem Slider (v1.1.0)
 
 A lightweight macOS menu bar lorem ipsum generator — drag a slider to the word count you need, let go, and it's already on your clipboard.
 
@@ -11,8 +11,8 @@ A lightweight macOS menu bar lorem ipsum generator — drag a slider to the word
 **Dock icon:** since this is a menu-bar-only app (no Dock tile while running), dragging `LoremSlider.app` onto the Dock yourself gives you a launcher shortcut rather than a live app tile. Clicking it opens the panel directly — on a cold launch and on every click after that, even while Lorem Slider is already running in the background.
 
 **Panel:**
-- Drag the slider (0–500) to the word count you want; releasing it generates that many words of lorem ipsum and copies it to the clipboard automatically — a "✓ Copied" note flashes to confirm it
-- Click the number or its caption to copy again without moving the slider
+- Drag the slider (1–500) to the word count you want; releasing it generates that many words of lorem ipsum and copies it to the clipboard automatically — a "✓ Copied" note flashes to confirm it. The slider accelerates: the first half of the drag covers 1-100 words for fine control, the second half covers 101-500 for the rarer large counts
+- Click the number or its caption to copy again without moving the slider — each copy starts from a different point in the source text, so repeating the same count doesn't paste the same words twice
 - The last word count you picked is remembered between launches
 - Interface defaults to English, with an automatic Spanish translation when your Mac's system language is Spanish
 

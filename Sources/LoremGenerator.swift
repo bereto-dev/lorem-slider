@@ -34,10 +34,14 @@ enum LoremGenerator {
 
     static func generate(wordCount: Int) -> String {
         guard wordCount > 0 else { return "" }
+        // Starting from a random point in the word list each time (instead of always
+        // index 0) means copying the same word count twice in a row doesn't paste the
+        // exact same text both times.
+        let start = Int.random(in: 0..<words.count)
         var result: [String] = []
         result.reserveCapacity(wordCount)
         for i in 0..<wordCount {
-            result.append(words[i % words.count])
+            result.append(words[(start + i) % words.count])
         }
         var text = result.joined(separator: " ")
         text = text.prefix(1).uppercased() + text.dropFirst()
