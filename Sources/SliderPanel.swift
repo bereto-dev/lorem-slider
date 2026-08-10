@@ -7,7 +7,9 @@ class SliderPanel: NSPanel {
 
     private let countLabel = ClickableLabel(labelWithString: "0")
     private let captionLabel = label(NSLocalizedString("words", comment: "Caption next to the word count, e.g. \"18 words\""), size: 15, weight: .medium, alpha: 0.65)
-    private let slider = ReleaseSlider(value: 0, minValue: 0, maxValue: 500, target: nil, action: nil)
+    // Slider's own range is a plain 0...1 drag position; SliderCurve maps that to the
+    // actual (non-linear) word count.
+    private let slider = ReleaseSlider(value: 0, minValue: 0, maxValue: 1, target: nil, action: nil)
     private let copyToast = CopyToastView()
     private var card: CardView!
 
@@ -61,8 +63,8 @@ class SliderPanel: NSPanel {
         slider.target = self
         slider.action = #selector(sliderChanged)
         slider.onRelease = { [weak self] in self?.copyCurrent() }
-        slider.integerValue = LoremPreferences.lastCount
-        countLabel.stringValue = "\(slider.integerValue)"
+        slider.doubleValue = SliderCurve.position(forCount: LoremPreferences.lastCount)
+        countLabel.stringValue = "\(currentCount)"
 
         // Number + caption on one line ("18 words") instead of stacked, so the whole
         // top section only needs one line's worth of height.
@@ -145,12 +147,16 @@ class SliderPanel: NSPanel {
 
     // MARK: - Actions
 
+    private var currentCount: Int {
+        SliderCurve.wordCount(forPosition: slider.doubleValue)
+    }
+
     @objc private func sliderChanged() {
-        countLabel.stringValue = "\(slider.integerValue)"
+        countLabel.stringValue = "\(currentCount)"
     }
 
     private func copyCurrent() {
-        let count = slider.integerValue
+        let count = currentCount
         LoremPreferences.lastCount = count
         let text = LoremGenerator.generate(wordCount: count)
         PasteboardWriter.copy(text)

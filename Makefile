@@ -15,6 +15,7 @@ $(BUNDLE): $(SOURCES) Resources/Info.plist Resources/AppIcon.icns Resources/en.l
 		-o $(EXEC)
 	@cp Resources/Info.plist $(BUNDLE)/Contents/Info.plist
 	@cp Resources/AppIcon.icns $(BUNDLE)/Contents/Resources/AppIcon.icns
+	@rm -rf $(BUNDLE)/Contents/Resources/en.lproj $(BUNDLE)/Contents/Resources/es.lproj
 	@cp -R Resources/en.lproj $(BUNDLE)/Contents/Resources/en.lproj
 	@cp -R Resources/es.lproj $(BUNDLE)/Contents/Resources/es.lproj
 	@echo "✓ Built $(BUNDLE)"
