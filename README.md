@@ -2,6 +2,8 @@
 
 A lightweight macOS menu bar lorem ipsum generator — drag a slider to the word count you need, let go, and it's already on your clipboard.
 
+![Lorem Slider panel showing a word count of 130 and its slider](screenshot.png)
+
 > Running an older version? Compare the number above to the one in **About Lorem Slider** (right-click the menu bar icon), then re-download `LoremSlider.app` from this repo if you're behind.
 
 **Menu bar:** click the quote icon to open the panel; click it again to hide it. Once open, it stays floating on top of every other app (and every Space, including full-screen ones) until you close it yourself — nothing you click outside of it will dismiss it, so you can keep it parked on screen while you work. Drag it anywhere by its background; it stays put the next time you reopen it.
