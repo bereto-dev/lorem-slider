@@ -9,7 +9,7 @@ class SliderPanel: NSPanel {
     private let captionLabel = label(NSLocalizedString("words", comment: "Caption next to the word count, e.g. \"18 words\""), size: 15, weight: .medium, alpha: 0.65)
     // Slider's own range is a plain 0...1 drag position; SliderCurve maps that to the
     // actual (non-linear) word count.
-    private let slider = ReleaseSlider(value: 0, minValue: 0, maxValue: 1, target: nil, action: nil)
+    private let slider = ReleaseSlider()
     private let copyToast = CopyToastView()
     private var card: CardView!
 
@@ -59,7 +59,6 @@ class SliderPanel: NSPanel {
         countLabel.onClick = { [weak self] in self?.copyCurrent() }
         captionLabel.onClick = { [weak self] in self?.copyCurrent() }
 
-        slider.isContinuous = true
         slider.target = self
         slider.action = #selector(sliderChanged)
         slider.onRelease = { [weak self] in self?.copyCurrent() }
@@ -232,20 +231,98 @@ private class CopyToastView: NSView {
     }
 }
 
-/// NSSlider subclass that reports the drag release separately from its continuous
-/// drag action, so the live label update (on every drag tick) and the
-/// copy-to-clipboard behavior (only once, on release) can use different callbacks.
+/// Custom linear slider. NSSlider's Aqua/dark track is nearly the same color as
+/// this panel's card fill — especially on Intel — so the bar disappears into the
+/// background. Drawn with #515153 (same fill as Colores' format toggle) and a
+/// white knob so it stays readable on both architectures.
 ///
-/// NSSlider tracks the entire drag — down, move, up — inside its own mouseDown(with:),
-/// which runs a private event loop and never dispatches a separate mouseUp(with:) to
-/// the view; overriding mouseUp directly is a no-op and silently never fires. Instead,
-/// let super.mouseDown block for the whole drag as usual, then fire onRelease once it
-/// returns — that return only happens once the mouse button has actually been released.
-private class ReleaseSlider: NSSlider {
+/// Tracks the entire drag inside mouseDown(with:) the way NSSlider does, then
+/// fires onRelease once that loop returns, so the live label update (every drag
+/// tick) and the copy-to-clipboard behavior (only on release) stay separate.
+private class ReleaseSlider: NSControl {
     var onRelease: (() -> Void)?
 
+    private static let trackFill = NSColor(srgbRed: 81 / 255, green: 81 / 255, blue: 83 / 255, alpha: 1) // #515153
+    private static let knobFill = NSColor.white
+    private static let knobSize: CGFloat = 16
+    private static let trackHeight: CGFloat = 6
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        isEnabled = true
+    }
+
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+
+    private var position: Double = 0 {
+        didSet { needsDisplay = true }
+    }
+
+    override var intrinsicContentSize: NSSize {
+        NSSize(width: NSView.noIntrinsicMetric, height: 22)
+    }
+
+    override var doubleValue: Double {
+        get { position }
+        set { position = min(max(newValue, 0), 1) }
+    }
+
+    override func draw(_ dirtyRect: NSRect) {
+        let inset = Self.knobSize / 2
+        let trackRect = NSRect(
+            x: inset,
+            y: bounds.midY - Self.trackHeight / 2,
+            width: max(0, bounds.width - Self.knobSize),
+            height: Self.trackHeight
+        )
+        let track = NSBezierPath(roundedRect: trackRect, xRadius: Self.trackHeight / 2, yRadius: Self.trackHeight / 2)
+        Self.trackFill.setFill()
+        track.fill()
+
+        let t = CGFloat(doubleValue)
+        let knobRect = NSRect(
+            x: trackRect.minX + trackRect.width * t - Self.knobSize / 2,
+            y: bounds.midY - Self.knobSize / 2,
+            width: Self.knobSize,
+            height: Self.knobSize
+        )
+        let knob = NSBezierPath(ovalIn: knobRect)
+        Self.knobFill.setFill()
+        knob.fill()
+    }
+
     override func mouseDown(with event: NSEvent) {
-        super.mouseDown(with: event)
+        updateValue(from: event)
+        sendAction(action, to: target)
+
+        var dragging = true
+        while dragging {
+            guard let next = window?.nextEvent(matching: [.leftMouseDragged, .leftMouseUp]) else { break }
+            switch next.type {
+            case .leftMouseDragged:
+                updateValue(from: next)
+                sendAction(action, to: target)
+            case .leftMouseUp:
+                updateValue(from: next)
+                sendAction(action, to: target)
+                dragging = false
+            default:
+                break
+            }
+        }
         onRelease?()
+    }
+
+    override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
+
+    override func resetCursorRects() {
+        addCursorRect(bounds, cursor: .pointingHand)
+    }
+
+    private func updateValue(from event: NSEvent) {
+        let loc = convert(event.locationInWindow, from: nil)
+        let usable = bounds.width - Self.knobSize
+        guard usable > 0 else { return }
+        doubleValue = Double(min(max((loc.x - Self.knobSize / 2) / usable, 0), 1))
     }
 }

@@ -1,6 +1,6 @@
-# Lorem Slider (v1.1.0)
+# Lorem Slider (v1.2.0)
 
-A lightweight macOS menu bar lorem ipsum generator — drag a slider to the word count you need, let go, and it's already on your clipboard.
+A lightweight macOS menu bar lorem ipsum generator — drag a slider to the word count you need, let go, and it's already on your clipboard. Ships as a universal binary for Intel and Apple Silicon.
 
 ![Lorem Slider panel showing a word count of 130 and its slider](screenshot.png)
 
@@ -24,8 +24,9 @@ The word list cycles through a fixed lorem ipsum passage, so any count from 0 to
 
 ## Requirements
 
-- macOS 10.15 or later
-- Xcode Command Line Tools (`xcode-select --install`)
+- macOS 11 or later
+- Intel or Apple Silicon Mac
+- Xcode Command Line Tools (`xcode-select --install`) to build from source
 
 ## Download & run (no build required)
 
@@ -50,6 +51,19 @@ Because the app isn't signed or notarized (no Apple Developer account needed), m
 
 Right-click the menu bar icon → **Check for Updates…** / **About Lorem Slider** / **Quit Lorem Slider**. Inside the panel, the last word count you picked is remembered between launches (`UserDefaults`).
 
+## Changelog
+
+### 1.2.0 — Intel and Apple Silicon
+Lorem Slider now ships as a universal binary, so it opens on Intel Macs as well as Apple Silicon. v1.1.0 was Apple Silicon only and would not launch on Intel at all. The slider track is redrawn for the dark panel — `#515153`, with a white knob — so it stands out from the popup background on Intel as well as Apple Silicon. Requires macOS 11 or later.
+
+### 1.1.0 — Accelerating slider and unique copies
+- The slider now accelerates: the first half of the drag covers 1–100 words for fine control, the second half covers 101–500
+- Each copy starts from a different point in the source text, so repeating the same count doesn't paste the same words twice
+- The slider starts at 1 instead of 0
+
+### 1.0.0 — First release
+A menu-bar lorem ipsum generator: click the quote icon, drag the slider to a word count, and the text is already on your clipboard.
+
 ## Origin
 
 Built by Roberto Pacheco for quickly grabbing a specific word count of lorem ipsum without opening a browser.
@@ -64,4 +78,4 @@ Built by [devteam.partners](https://devteam.partners/about-us) 🌐
 
 ---
 
-Built with Swift + AppKit. No external dependencies.
+Built with Swift + AppKit. Universal binary (x86_64 + arm64). No external dependencies.
