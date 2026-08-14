@@ -69,7 +69,7 @@ class StatusBarController: NSObject {
     }
 
     @objc private func openRepo() {
-        NSWorkspace.shared.open(URL(string: "https://github.com/bereto-dev/lorem-slider")!)
+        NSWorkspace.shared.open(URL(string: "https://bereto.gumroad.com/l/lorem-slider")!)
     }
 
     @objc private func showAbout() {
