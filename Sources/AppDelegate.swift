@@ -13,6 +13,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // the screen — permanently, since positioning only ever happens once. Waiting
         // for the user's first real click sidesteps this entirely: by definition they
         // can't click a button that isn't already laid out on screen.
+
+        // Daily update checks (Sparkle).
+        Updater.shared.start()
+        // Debug: `LoremSlider --check-for-updates` runs a user-initiated update check right away.
+        if CommandLine.arguments.contains("--check-for-updates") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { Updater.shared.checkForUpdates() }
+        }
     }
 
     // Fires when the Dock icon (manually added by the user, since this LSUIElement

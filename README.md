@@ -1,10 +1,10 @@
-# Lorem Slider (v1.2.0)
+# Lorem Slider (v1.3.0)
 
 A lightweight macOS menu bar lorem ipsum generator — drag a slider to the word count you need, let go, and it's already on your clipboard. Ships as a universal binary for Intel and Apple Silicon.
 
 ![Lorem Slider menu bar panel showing a word count and its slider](lorem_slider_cover.jpg)
 
-> Running an older version? Compare the number above to the one in **About Lorem Slider** (right-click the menu bar icon), then re-download from [Gumroad](https://bereto.gumroad.com/l/lorem-slider) if you're behind.
+> Running an older version? From 1.3.0 on, Lorem Slider updates itself: right-click the menu bar icon → **Check for Updates…**. On 1.2.0 or earlier, re-download it once from [Gumroad](https://bereto.gumroad.com/l/lorem-slider).
 
 **Menu bar:** click the quote icon to open the panel; click it again to hide it. Once open, it stays floating on top of every other app (and every Space, including full-screen ones) until you close it yourself — nothing you click outside of it will dismiss it, so you can keep it parked on screen while you work. Drag it anywhere by its background; it stays put the next time you reopen it.
 
@@ -16,6 +16,8 @@ A lightweight macOS menu bar lorem ipsum generator — drag a slider to the word
 - The last word count you picked is remembered between launches
 - Interface defaults to English, with an automatic Spanish translation when your Mac's system language is Spanish
 
+**Updates:** checks once a day and asks before installing. Every update is signed and verified before it's applied.
+
 ## How it works
 
 The panel is a non-activating `NSPanel` at `.floating` window level, which is what lets it sit on top of whatever app you're using without ever stealing keyboard focus from it. It's positioned under the menu bar icon only the first time it's shown after launch; after that it stays exactly where you last dragged it for as long as the app keeps running (quitting and reopening Lorem Slider resets it back under the icon).
@@ -24,7 +26,7 @@ The word list cycles through a fixed lorem ipsum passage, so any count from 0 to
 
 ## Requirements
 
-- macOS 11 or later
+- macOS 13 or later
 - Intel or Apple Silicon Mac
 - Xcode Command Line Tools (`xcode-select --install`) to build from source
 
@@ -55,6 +57,9 @@ Right-click the menu bar icon → **Check for Updates…** / **About Lorem Slide
 
 ## Changelog
 
+### 1.3.0 — Automatic updates
+Lorem Slider now updates itself. Once a day it checks for a new version and, if there is one, shows you what's new with an Install and Relaunch button. You can also check any time from the right-click menu (Check for Updates…). Updates are signed, so the app only installs versions that really come from me. Requires macOS 13 or later (it was 11).
+
 ### 1.2.0 — Intel and Apple Silicon
 Lorem Slider now ships as a universal binary, so it opens on Intel Macs as well as Apple Silicon. v1.1.0 was Apple Silicon only and would not launch on Intel at all. The slider track is redrawn for the dark panel — `#515153`, with a white knob — so it stands out from the popup background on Intel as well as Apple Silicon. Requires macOS 11 or later.
 
@@ -80,4 +85,4 @@ Built by [devteam.partners](https://devteam.partners/about-us) 🌐
 
 ---
 
-Built with Swift + AppKit. Universal binary (x86_64 + arm64). No external dependencies.
+Built with Swift + AppKit. Universal binary (x86_64 + arm64). Automatic updates use [Sparkle](https://sparkle-project.org) (downloaded at build time, nothing vendored).

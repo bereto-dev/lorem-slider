@@ -1,32 +1,63 @@
+# Version is defined in Resources/Info.plist (CFBundleShortVersionString + CFBundleVersion).
+# MIN_OS 13.0: Sparkle 2.10 needs macOS 12+, and the universal build on the macOS 27 toolchain needs 13.0
+#   (the x86_64 Swift compat56 shim is dropped below that). Same floor as StarlinkBar and EFStatus.
+#   make        -> LoremSlider.app (universal)
+#   make zip    -> dist/LoremSlider-<version>.zip
+# Sparkle (automatic updates) is downloaded once into vendor/ and checked against its SHA-256.
 APP     = LoremSlider
 BUNDLE  = $(APP).app
 EXEC    = $(BUNDLE)/Contents/MacOS/$(APP)
 SOURCES = $(wildcard Sources/*.swift)
-MIN_OS  = 11.0
+MIN_OS  = 13.0
+VERSION = $(shell /usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Resources/Info.plist)
 
-.PHONY: all clean run
+SPARKLE_VERSION = 2.10.0
+SPARKLE_SHA256  = c2bf58aa8387266ac179357b1415d6f2635f044da8be41042af32425dae6da0c
+SPARKLE_DIR     = vendor/Sparkle-$(SPARKLE_VERSION)
+SPARKLE_FW      = $(SPARKLE_DIR)/Sparkle.framework
+
+SWIFTC_FLAGS = -swift-version 5 -framework Cocoa \
+	-F $(SPARKLE_DIR) -framework Sparkle -Xlinker -rpath -Xlinker @executable_path/../Frameworks
+
+.PHONY: all clean run zip
 
 all: $(BUNDLE)
 
-$(BUNDLE): $(SOURCES) Resources/Info.plist Resources/AppIcon.icns Resources/en.lproj/Localizable.strings Resources/es.lproj/Localizable.strings
-	@mkdir -p $(BUNDLE)/Contents/MacOS
-	@mkdir -p $(BUNDLE)/Contents/Resources
-	swiftc $(SOURCES) \
-		-framework Cocoa \
-		-target x86_64-apple-macosx$(MIN_OS) \
-		-o $(EXEC)-x86_64
-	swiftc $(SOURCES) \
-		-framework Cocoa \
-		-target arm64-apple-macosx$(MIN_OS) \
-		-o $(EXEC)-arm64
+$(SPARKLE_FW):
+	@echo "Fetching Sparkle $(SPARKLE_VERSION)..."
+	@mkdir -p vendor
+	@curl -fsSL -o vendor/Sparkle.tar.xz \
+		https://github.com/sparkle-project/Sparkle/releases/download/$(SPARKLE_VERSION)/Sparkle-$(SPARKLE_VERSION).tar.xz
+	@echo "$(SPARKLE_SHA256)  vendor/Sparkle.tar.xz" | shasum -a 256 -c - >/dev/null || { echo "Sparkle checksum mismatch"; rm -f vendor/Sparkle.tar.xz; exit 1; }
+	@rm -rf $(SPARKLE_DIR) && mkdir -p $(SPARKLE_DIR)
+	@tar -xJf vendor/Sparkle.tar.xz -C $(SPARKLE_DIR) && rm -f vendor/Sparkle.tar.xz
+
+$(BUNDLE): $(SOURCES) Resources/Info.plist Resources/AppIcon.icns Resources/en.lproj/Localizable.strings Resources/es.lproj/Localizable.strings | $(SPARKLE_FW)
+	@rm -rf $(BUNDLE)
+	@mkdir -p $(BUNDLE)/Contents/MacOS $(BUNDLE)/Contents/Resources $(BUNDLE)/Contents/Frameworks
+	swiftc $(SOURCES) $(SWIFTC_FLAGS) -target x86_64-apple-macosx$(MIN_OS) -o $(EXEC)-x86_64
+	swiftc $(SOURCES) $(SWIFTC_FLAGS) -target arm64-apple-macosx$(MIN_OS) -o $(EXEC)-arm64
 	lipo -create -output $(EXEC) $(EXEC)-x86_64 $(EXEC)-arm64
 	@rm -f $(EXEC)-x86_64 $(EXEC)-arm64
 	@cp Resources/Info.plist $(BUNDLE)/Contents/Info.plist
 	@cp Resources/AppIcon.icns $(BUNDLE)/Contents/Resources/AppIcon.icns
-	@rm -rf $(BUNDLE)/Contents/Resources/en.lproj $(BUNDLE)/Contents/Resources/es.lproj
 	@cp -R Resources/en.lproj $(BUNDLE)/Contents/Resources/en.lproj
 	@cp -R Resources/es.lproj $(BUNDLE)/Contents/Resources/es.lproj
-	@echo "✓ Built universal $(BUNDLE) (x86_64 + arm64)"
+	@ditto $(SPARKLE_FW) $(BUNDLE)/Contents/Frameworks/Sparkle.framework
+	@# Ad-hoc signature, inside out: Sparkle's helpers, then the framework, then the app.
+	@for item in $(BUNDLE)/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices/*.xpc \
+		$(BUNDLE)/Contents/Frameworks/Sparkle.framework/Versions/B/Autoupdate \
+		$(BUNDLE)/Contents/Frameworks/Sparkle.framework/Versions/B/Updater.app; do \
+		[ -e "$$item" ] && codesign --force --sign - "$$item" >/dev/null; done; true
+	@codesign --force --sign - $(BUNDLE)/Contents/Frameworks/Sparkle.framework >/dev/null
+	@codesign --force --sign - --identifier com.loremslider.app $(BUNDLE) >/dev/null
+	@echo "✓ Built universal $(BUNDLE) $(VERSION) ($$(lipo -archs $(EXEC)))"
+
+zip: $(BUNDLE)
+	@mkdir -p dist
+	@rm -f dist/$(APP)-$(VERSION).zip
+	@ditto -c -k --sequesterRsrc --keepParent $(BUNDLE) dist/$(APP)-$(VERSION).zip
+	@echo "✓ Packaged dist/$(APP)-$(VERSION).zip"
 
 run: all
 	open $(BUNDLE)

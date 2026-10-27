@@ -1,5 +1,6 @@
 import Cocoa
 
+@MainActor
 class StatusBarController: NSObject {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private var panel: SliderPanel?
@@ -52,7 +53,7 @@ class StatusBarController: NSObject {
     private func showContextMenu() {
         let menu = NSMenu()
 
-        let updates = NSMenuItem(title: "Check for Updates…", action: #selector(openRepo), keyEquivalent: "")
+        let updates = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
         updates.target = self
         menu.addItem(updates)
 
@@ -68,8 +69,8 @@ class StatusBarController: NSObject {
         statusItem.menu = nil
     }
 
-    @objc private func openRepo() {
-        NSWorkspace.shared.open(URL(string: "https://bereto.gumroad.com/l/lorem-slider")!)
+    @objc private func checkForUpdates() {
+        Updater.shared.checkForUpdates()
     }
 
     @objc private func showAbout() {

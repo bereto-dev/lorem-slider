@@ -2,3 +2,5 @@
 *.swiftmodule
 LoremSlider.app/
 AGENTS.md
+vendor/
+dist/
